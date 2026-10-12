@@ -1,0 +1,25 @@
+# SINGLE-STAGE DEMO:
+# One SDK image is used to publish AND run the application.
+FROM mcr.microsoft.com/dotnet/sdk:10.0
+
+WORKDIR /src
+
+COPY Backend.csproj ./
+RUN dotnet restore Backend.csproj
+
+COPY Program.cs ./
+RUN dotnet publish Backend.csproj \
+    --configuration Release \
+    --output /app/publish \
+    --no-restore \
+    && echo "\n========== SINGLE-STAGE: PUBLISHED APPLICATION FILES ==========" \
+    && ls -lah /app/publish \
+    && echo "\n========== SINGLE-STAGE: SDKs INCLUDED IN THIS IMAGE ==========" \
+    && dotnet --list-sdks
+
+# Run from the publish folder, where Backend.dll was created.
+WORKDIR /app/publish
+ENV ASPNETCORE_HTTP_PORTS=8080
+EXPOSE 8080
+
+ENTRYPOINT ["dotnet", "Backend.dll"]
